@@ -1,8 +1,8 @@
 --- a/Makefile
 +++ b/Makefile
-@@ -257,6 +257,8 @@
+@@ -321,6 +321,8 @@
+ # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
  ARCH		?= $(SUBARCH)
- CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
  
 +-include $(obj)/.kernelvariables
 +

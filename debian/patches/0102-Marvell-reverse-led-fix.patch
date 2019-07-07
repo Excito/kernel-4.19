@@ -1,8 +1,8 @@
 --- a/drivers/net/phy/Kconfig
 +++ b/drivers/net/phy/Kconfig
-@@ -264,6 +264,13 @@
+@@ -364,6 +364,13 @@
  	---help---
- 	  Currently has a driver for the 88E1011S
+ 	  Currently has a driver for the Amlogic Meson GXL Internal PHY
  
 +config MARVELL_PHY_REVERSE
 +	depends on MARVELL_PHY
@@ -16,7 +16,7 @@
  	---help---
 --- a/drivers/net/phy/marvell.c
 +++ b/drivers/net/phy/marvell.c
-@@ -895,12 +895,24 @@
+@@ -931,12 +931,24 @@
  		return err;
  
  	/* Adjust LED Control */
