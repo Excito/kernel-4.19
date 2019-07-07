@@ -138,3 +138,5 @@ override_dh_auto_clean: SOURCE_DIR=$(BUILD_DIR)/source
 override_dh_auto_clean:
 	+ARCH=$(DEB_HOST_ARCH_CPU) make mrproper
 	+test ! -e $(SOURCE_DIR) || $(MAKE_CLEAN) -C '$(SOURCE_DIR)' clean
+
+override_dh_auto_test:
