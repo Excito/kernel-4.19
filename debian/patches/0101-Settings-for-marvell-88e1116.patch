@@ -1,0 +1,44 @@
+--- a/drivers/net/phy/marvell.c
++++ b/drivers/net/phy/marvell.c
+@@ -1545,6 +1545,23 @@
+ 		.get_stats = marvell_get_stats,
+ 	},
+ 	{
++		.phy_id = MARVELL_PHY_ID_88E1116,
++		.phy_id_mask = MARVELL_PHY_ID_MASK,
++		.name = "Marvell 88E1116",
++		.features = PHY_GBIT_FEATURES,
++		.flags = PHY_HAS_INTERRUPT,
++		.config_init = &m88e1118_config_init,
++		.config_aneg = &m88e1118_config_aneg,
++		.read_status = &genphy_read_status,
++		.ack_interrupt = &marvell_ack_interrupt,
++		.config_intr = &marvell_config_intr,
++		.resume = &genphy_resume,
++		.suspend = &genphy_suspend,
++		.get_sset_count = marvell_get_sset_count,
++		.get_strings = marvell_get_strings,
++		.get_stats = marvell_get_stats,
++	},
++	{
+ 		.phy_id = MARVELL_PHY_ID_88E1118,
+ 		.phy_id_mask = MARVELL_PHY_ID_MASK,
+ 		.name = "Marvell 88E1118",
+@@ -1740,6 +1757,7 @@
+ 	{ MARVELL_PHY_ID_88E1101, MARVELL_PHY_ID_MASK },
+ 	{ MARVELL_PHY_ID_88E1112, MARVELL_PHY_ID_MASK },
+ 	{ MARVELL_PHY_ID_88E1111, MARVELL_PHY_ID_MASK },
++	{ MARVELL_PHY_ID_88E1116, MARVELL_PHY_ID_MASK },
+ 	{ MARVELL_PHY_ID_88E1118, MARVELL_PHY_ID_MASK },
+ 	{ MARVELL_PHY_ID_88E1121R, MARVELL_PHY_ID_MASK },
+ 	{ MARVELL_PHY_ID_88E1145, MARVELL_PHY_ID_MASK },
+--- a/include/linux/marvell_phy.h
++++ b/include/linux/marvell_phy.h
+@@ -8,6 +8,7 @@
+ #define MARVELL_PHY_ID_88E1101		0x01410c60
+ #define MARVELL_PHY_ID_88E1112		0x01410c90
+ #define MARVELL_PHY_ID_88E1111		0x01410cc0
++#define MARVELL_PHY_ID_88E1116		0x01410e40
+ #define MARVELL_PHY_ID_88E1118		0x01410e10
+ #define MARVELL_PHY_ID_88E1121R		0x01410cb0
+ #define MARVELL_PHY_ID_88E1145		0x01410cd0

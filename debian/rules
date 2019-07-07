@@ -1,0 +1,140 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+UPLOADER  := $(shell dpkg-parsechangelog | sed -ne 's,^Maintainer: .[^<]*<\([^>]*\)>,\1,p')
+
+DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
+DEB_NOEPOCH_VERSION := $(shell echo $(DEB_VERSION) | cut -d: -f2-)
+DEB_UPSTREAM_VERSION := $(shell echo $(DEB_NOEPOCH_VERSION) | sed 's/-[^-]*$$//')
+DEB_REVISION :=  $(shell echo $(DEB_NOEPOCH_VERSION) | awk -F- '{print $$(NF)}')
+
+ABINAME=$(DEB_NOEPOCH_VERSION)
+UPSTREAMVERSION=$(DEB_UPSTREAM_VERSION)
+
+include /usr/share/dpkg/architecture.mk
+
+ifneq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+	CROSS_COMPILE := $(DEB_HOST_GNU_TYPE)-
+endif
+KERNEL_ARCH := $(DEB_HOST_GNU_CPU)
+
+BUILD_DIR=debian/build
+
+export DEB_HOST_ARCH DEB_HOST_GNU_TYPE DEB_BUILD_ARCH
+
+setup_env := env -u ABINAME -u ARCH -u FEATURESET -u FLAVOUR -u VERSION -u LOCALVERSION
+setup_env += DISTRIBUTION_OFFICIAL_BUILD=1 DISTRIBUTION_UPLOADER=$(UPLOADER) DISTRIBUTION_VERSION="$(DEB_VERSION)"
+
+MAKE_CLEAN = $(setup_env) $(MAKE)
+
+PACKAGE = bubba3-kernel
+HEADER_PACKAGE := bubba3-kernel-headers-armel
+
+CONFIG=bubba3_defconfig
+
+PACKAGE_DIR=debian/$(PACKAGE)
+
+%:
+	+dh $@ --parallel
+
+define REAL_VERSION
+$(shell cat $(SOURCE_DIR)/include/config/kernel.release)
+endef
+
+override_dh_auto_configure: SOURCE_FILES = $(filter-out debian .git .pc, $(wildcard * .[^.]*))
+override_dh_auto_configure: SOURCE_DIR = $(BUILD_DIR)/source
+override_dh_auto_configure: 
+	rm -rf $(SOURCE_DIR)
+	mkdir -p $(SOURCE_DIR)
+	cp -al $(SOURCE_FILES) $(SOURCE_DIR)
+	chmod -R u+rw,go=rX $(SOURCE_DIR)
+	touch $(SOURCE_DIR)/.scmversion
+
+	echo '-$(DEB_REVISION)' > $(SOURCE_DIR)/localversion
+	echo 'override ARCH = $(DEB_HOST_ARCH_CPU)' >> $(SOURCE_DIR)/.kernelvariables
+	echo 'override KERNELRELEASE = $(ABINAME)'  >> $(SOURCE_DIR)/.kernelvariables
+ifneq (,$(findstring ccache,$(DEB_BUILD_OPTIONS)))
+	echo 'CCACHE = ccache' >> $(SOURCE_DIR)/.kernelvariables
+	echo 'CC = ccache $(CROSS_COMPILE)gcc' >> $(SOURCE_DIR)/.kernelvariables
+endif
+	echo 'ifneq ($$(DEB_BUILD_ARCH),$$(DEB_HOST_ARCH))' >> $(SOURCE_DIR)/.kernelvariables
+	echo 'override CROSS_COMPILE = $$(DEB_HOST_GNU_TYPE)-' >> $(SOURCE_DIR)/.kernelvariables
+	echo 'endif' >> $(SOURCE_DIR)/.kernelvariables
+	+$(MAKE_CLEAN) -C $(SOURCE_DIR) $(CONFIG)
+	+$(MAKE_CLEAN) -C $(SOURCE_DIR) prepare
+
+override_dh_auto_build: SOURCE_DIR=$(BUILD_DIR)/source
+override_dh_auto_build:
+	+$(MAKE_CLEAN) -C $(SOURCE_DIR) zImage
+	+$(MAKE_CLEAN) -C $(SOURCE_DIR) kirkwood-b3.dtb
+	cp $(SOURCE_DIR)/arch/arm/boot/zImage $(BUILD_DIR)
+	cp $(SOURCE_DIR)/arch/arm/boot/dts/kirkwood-b3.dtb $(BUILD_DIR)
+	debian/build_b3_uImage.sh $(BUILD_DIR) $(call REAL_VERSION)
+	mv $(BUILD_DIR)/uImage $(SOURCE_DIR)
+	+$(MAKE_CLEAN) -C $(SOURCE_DIR) modules
+	sed 's/@VERSION@/$(call REAL_VERSION)/g' < debian/bubba3-kernel.prerm.in > debian/bubba3-kernel.prerm
+	sed 's/@VERSION@/$(call REAL_VERSION)/g' < debian/bubba3-kernel.postinst.in > debian/bubba3-kernel.postinst
+
+override_dh_installmodules:
+	dh_installmodules -n
+
+override_dh_auto_install: SOURCE_DIR=$(BUILD_DIR)/source
+ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+override_dh_auto_install: install_headers
+endif
+override_dh_auto_install:
+	+$(MAKE_CLEAN) -C $(SOURCE_DIR) INSTALL_MOD_PATH=$(CURDIR)/$(PACKAGE_DIR) INSTALL_MOD_STRIP=1 modules_install
+	mkdir -p $(PACKAGE_DIR)/boot
+	cp $(SOURCE_DIR)/uImage $(PACKAGE_DIR)/boot
+	cp $(SOURCE_DIR)/.config $(PACKAGE_DIR)/boot/config-$(call REAL_VERSION)
+	cp $(SOURCE_DIR)/System.map $(PACKAGE_DIR)/boot/System.map-$(call REAL_VERSION)
+	find $(PACKAGE_DIR)/lib/modules/$(call REAL_VERSION)/ \
+		-mindepth 1 -maxdepth 1 \
+		\! -name kernel \! -name modules.order \
+		\! -name modules.builtin \
+		-exec rm {} \+
+	rm $(PACKAGE_DIR)/lib/firmware -rf	
+
+install_headers: PACKAGE_NAME = $(HEADER_PACKAGE)
+install_headers: BASE_DIR = /usr/src/$(PACKAGE_NAME)
+install_headers: PACKAGE_DIR = debian/$(PACKAGE_NAME)
+install_headers: INSTALL_DIR = $(PACKAGE_DIR)/$(BASE_DIR)
+install_headers: DH_OPTIONS = -p$(PACKAGE_NAME) -a$(DEB_HOST_ARCH)
+install_headers: SOURCE_DIR=$(BUILD_DIR)/source
+install_headers:
+	cd $(SOURCE_DIR); \
+		( \
+		echo Makefile; \
+		echo .kernelvariables; \
+		echo .config; \
+		echo arch/$(KERNEL_ARCH)/kernel/asm-offsets.s; \
+		echo Module.symvers; \
+		find include -type f; \
+		find $$(find arch/$(KERNEL_ARCH) \( -name include \) -type d -print) -print; \
+		) \
+		| \
+		cpio -pd --preserve-modification-time '$(CURDIR)/$(INSTALL_DIR)'
+	
+	cp -a scripts $(INSTALL_DIR)
+
+	mkdir -p $(PACKAGE_DIR)/lib/modules/$(call REAL_VERSION)
+	ln -s /usr/src/$(PACKAGE_NAME) $(PACKAGE_DIR)/lib/modules/$(call REAL_VERSION)/build
+
+override_dh_clean: SOURCE_DIR=$(BUILD_DIR)/source
+override_dh_clean:
+	rm -f debian/bubba3-kernel.prerm debian/bubba3-kernel.postinst
+	rm -rf $(BUILD_DIR)
+	dh_clean $@
+
+override_dh_auto_clean: SOURCE_DIR=$(BUILD_DIR)/source
+override_dh_auto_clean:
+	+ARCH=$(DEB_HOST_ARCH_CPU) make mrproper
+	+test ! -e $(SOURCE_DIR) || $(MAKE_CLEAN) -C '$(SOURCE_DIR)' clean

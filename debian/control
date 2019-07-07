@@ -1,0 +1,21 @@
+Source: linux
+Section: kernel
+Priority: extra
+Maintainer: Charles Leclerc <leclerc.charles@gmail.com>
+Build-Depends: debhelper (>= 8.0.0), device-tree-compiler, u-boot-tools, bc, awk
+Standards-Version: 3.9.2
+Homepage: http://kernel.org
+
+Package: bubba3-kernel
+Architecture: armel
+Depends: ${misc:Depends}
+Description: The linux kernel for the Excito platforms
+ Contains the linux kernel modified to fit on the Excito platforms
+
+Package: bubba3-kernel-headers-armel
+Architecture: armel
+Provides: linux-headers
+Depends: ${misc:Depends} gcc-6
+Description: Header files for Excito modified kernel (armel)
+ This package provides the architecture-specific kernel header files for
+ Linux kernel modified by excito.

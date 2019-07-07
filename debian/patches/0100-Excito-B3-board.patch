@@ -1,0 +1,16 @@
+--- a/arch/arm/boot/dts/kirkwood-b3.dts
++++ b/arch/arm/boot/dts/kirkwood-b3.dts
+@@ -130,11 +130,13 @@
+ 		error_led {
+ 			label = "bubba3:red:error";
+ 			gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
+ 		};
+ 
+ 		active_led {
+ 			label = "bubba3:blue:active";
+ 			gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
+ 		};
+ 	};
+ 

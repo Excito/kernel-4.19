@@ -1,0 +1,45 @@
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -130,4 +130,11 @@
+ 	  Say 'Y' here if you want your kernel to support boards based
+ 	  on the Marvell Kirkwood device tree.
+ 
++config KIRKWOOD_ALWAYS_RESTART
++	bool "Restart board when powering off kernel"
++	depends on MACH_KIRKWOOD
++	help
++	  Say 'Y' here if you want your kernel to restart
++	  when asked to power off.
++
+ endif
+--- a/arch/arm/kernel/reboot.c
++++ b/arch/arm/kernel/reboot.c
+@@ -104,6 +104,14 @@
+ {
+ 	local_irq_disable();
+ 	smp_send_stop();
++
++#ifdef CONFIG_KIRKWOOD_ALWAYS_RESTART
++	if (arm_pm_restart)
++		arm_pm_restart(reboot_mode, NULL);
++	else
++		do_kernel_restart(NULL);
++#endif
++
+ 	while (1);
+ }
+ 
+@@ -118,6 +126,13 @@
+ 	local_irq_disable();
+ 	smp_send_stop();
+ 
++#ifdef CONFIG_KIRKWOOD_ALWAYS_RESTART
++	if (arm_pm_restart)
++		arm_pm_restart(reboot_mode, NULL);
++	else
++		do_kernel_restart(NULL);
++#endif
++
+ 	if (pm_power_off)
+ 		pm_power_off();
+ }
