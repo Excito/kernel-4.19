@@ -1,5 +1,6 @@
-linux (1:4.19.57-1) UNRELEASED; urgency=medium
+linux (1:4.19.57-1) buster; urgency=medium
 
-  * Initial version
+  * New upstream version
+  * Ported patches + configuration from 4.9 series
 
- -- Charles Leclerc <leclerc.charles@gmail.com>  Sat, 6 Jul 2019 23:43:29 -0500
+ -- Charles Leclerc <leclerc.charles@gmail.com>  Sat, 8 Jul 2019 23:17:29 -0500
