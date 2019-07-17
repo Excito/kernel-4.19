@@ -1,9 +1,9 @@
-linux (1:4.19.59-1) UNRELEASED; urgency=medium
+linux (1:4.19.59-1) buster; urgency=medium
 
   * New upstream version
   * Added missing netfilter modules 
 
- -- Charles Leclerc <leclerc.charles@gmail.com>  Wed, 17 Jul 2019 00:41:06 +0000
+ -- Charles Leclerc <leclerc.charles@gmail.com>  Wed, 17 Jul 2019 09:15:38 -0400
 
 linux (1:4.19.57-1) buster; urgency=medium
 
