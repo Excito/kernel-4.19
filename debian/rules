@@ -63,6 +63,9 @@ override_dh_auto_configure:
 	chmod -R u+rw,go=rX $(SOURCE_DIR)
 	touch $(SOURCE_DIR)/.scmversion
 
+	mkdir -p $(SOURCE_DIR)/debian
+	cp -al debian/certs $(SOURCE_DIR)/debian/
+
 	echo '-$(DEB_REVISION)' > $(SOURCE_DIR)/localversion
 	echo 'override ARCH = $(DEB_HOST_ARCH_CPU)' >> $(SOURCE_DIR)/.kernelvariables
 	echo 'override KERNELRELEASE = $(ABINAME)'  >> $(SOURCE_DIR)/.kernelvariables
