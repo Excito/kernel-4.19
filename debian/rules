@@ -39,6 +39,9 @@ PACKAGE = bubba3-kernel
 HEADER_PACKAGE := bubba3-kernel-headers-armel
 
 CONFIG=bubba3_defconfig
+CONFIG_SRC := debian/config/config \
+              debian/config/armel/config.marvell \
+              debian/config/config.bubba3
 
 PACKAGE_DIR=debian/$(PACKAGE)
 
@@ -52,6 +55,8 @@ endef
 override_dh_auto_configure: SOURCE_FILES = $(filter-out debian .git .pc, $(wildcard * .[^.]*))
 override_dh_auto_configure: SOURCE_DIR = $(BUILD_DIR)/source
 override_dh_auto_configure: 
+	KCONFIG_CONFIG=arch/$(KERNEL_ARCH)/configs/$(CONFIG) scripts/kconfig/merge_config.sh -m $(CONFIG_SRC)
+
 	rm -rf $(SOURCE_DIR)
 	mkdir -p $(SOURCE_DIR)
 	cp -al $(SOURCE_FILES) $(SOURCE_DIR)
